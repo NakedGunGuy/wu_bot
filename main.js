@@ -2,9 +2,9 @@ const Client = require("./modules/GameClient.js");
 const readline = require("readline");
 
 const client = new Client({
-  username: "your_name",
-  password: "your_password",
-  serverId: "eu1",
+  username: "",
+  password: "",
+  serverId: "",
 });
 
 // client.setSettings({
@@ -75,8 +75,20 @@ const client = new Client({
 // });
 
 client.setSettings({
-  workMap: "E-1",
-  killTargets: [{ name: "-=(Hydro)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false }],
+  workMap: "U-6",
+  killTargets: [
+      { name: "-=(Hydro)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
+      { name: "-=(Hyper|Hidro)=-", priority: 2, ammo: 1, rockets: 1, farmNearPortal: false },
+      { name: "-=(Jenta)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
+      { name: "-=(Hyper|Jenta)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
+      { name: "-=(Hyper|Raider)=-", priority: 4, ammo: 2, rockets: 2, farmNearPortal: false },
+      { name: "-=(Raider)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
+      { name: "-=(Bangoliour)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
+      { name: "-=(Hyper|Bangoliour)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
+      { name: "-=(Zavientos)=-", priority: 2, ammo: 1, rockets: 1, farmNearPortal: true },
+      { name: "-=(Magmius)=-", priority: 2, ammo: 1, rockets: 1, farmNearPortal: true },
+      { name: "-=(Hyper|Magmius)=-", priority: 4, ammo: 1, rockets: 1, farmNearPortal: true },
+  ],
   collectBoxTypes: [{ type: 0, priority: 1 }], //type either 0 1 or 3. 3 is green box, I think 0 is bonus and 1 is resource box
   minHP: 10,
   adviceHP: 70,
@@ -88,7 +100,7 @@ client.setSettings({
     delay: 5,
   },
   escape: {
-    enabled: false,
+    enabled: true,
     delay: 20000,
   },
   config: {
@@ -107,9 +119,9 @@ client.setSettings({
   },
   autobuy: {
     laser: {
-      RLX_1: false,
+      RLX_1: true,
       GLX_2: true,
-      BLX_3: false,
+      BLX_3: true,
       GLX_2_AS: false,
       MRS_6X: false,
     },
@@ -124,8 +136,8 @@ client.setSettings({
     },
   },
   break: {
-    interval: 0, // 1 hour
-    duration: 0, // 5 minutes
+    interval: 3600000, // Break interval (1 hour)
+    duration: 300000, // Break duration (5 minutes)
   },
 });
 
