@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: "wu-bot",
-      script: "./server.js",
+      script: "./bot.js",  // Standalone bot runner
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
@@ -10,7 +10,6 @@ module.exports = {
       max_memory_restart: "500M",
       env: {
         NODE_ENV: "production",
-        PORT: 4646,
       },
       error_file: "./logs/err.log",
       out_file: "./logs/out.log",
