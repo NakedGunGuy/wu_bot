@@ -1,0 +1,29 @@
+[Unit]
+Description=War Universe Bot Server
+Documentation=https://github.com/AlloryDante/War-Universe-PacketBot
+After=network.target mongod.service
+
+[Service]
+Type=simple
+User=wu_bot
+WorkingDirectory=/opt/wu_bot
+Environment=NODE_ENV=production
+Environment=PATH=/usr/bin:/usr/local/bin
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/opt/wu_bot/logs/wu-bot.log
+StandardError=append:/opt/wu_bot/logs/wu-bot-error.log
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/wu_bot
+
+# Resource limits
+LimitNOFILE=65536
+MemoryLimit=1G
+
+[Install]
+WantedBy=multi-user.target
