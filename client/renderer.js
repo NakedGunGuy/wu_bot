@@ -428,6 +428,28 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.stroke();
   }
 
+  const drawDashedCircle = ({ x, y, radius, color = "white", lineWidth = 1, dash = [4, 4] }) => {
+    const pos = scalePosition({ x, y });
+    const scaledRadius = radius * ((scaleX + scaleY) / 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.setLineDash(dash);
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, scaledRadius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  const drawCircle = ({ x, y, radius, color = "white", lineWidth = 1 }) => {
+    const pos = scalePosition({ x, y });
+    const scaledRadius = radius * ((scaleX + scaleY) / 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, scaledRadius, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
   const drawCollectable = ({ x, y, type, width = 3, height = 3 }) => {
     let color;
 
@@ -455,6 +477,47 @@ document.addEventListener("DOMContentLoaded", () => {
     password: JSON.parse(localStorage.getItem("password")) || "",
     serverId: JSON.parse(localStorage.getItem("server")) || "eu1",
   });
+
+  // Event log system
+  const logEntries = [];
+  const MAX_LOG_ENTRIES = 200;
+  const LOG_COLORS = {
+    kill: "#ff4444",
+    collect: "#ffdb00",
+    health: "#44ff44",
+    escape: "#ff8800",
+    default: "#cccccc",
+  };
+
+  const originalConsoleLog = console.log;
+  console.log = function (...args) {
+    originalConsoleLog.apply(console, args);
+    const message = args.map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ");
+    let type = "default";
+    const msgLower = message.toLowerCase();
+    if (msgLower.includes("kill") || msgLower.includes("attack") || msgLower.includes("npc")) type = "kill";
+    else if (msgLower.includes("collect") || msgLower.includes("box")) type = "collect";
+    else if (msgLower.includes("health") || msgLower.includes("recover") || msgLower.includes("shield")) type = "health";
+    else if (msgLower.includes("escape") || msgLower.includes("enemy") || msgLower.includes("admin")) type = "escape";
+
+    logEntries.push({ time: new Date(), message, type });
+    if (logEntries.length > MAX_LOG_ENTRIES) logEntries.shift();
+
+    // Update log panel if visible
+    const logList = document.querySelector("#log-list");
+    if (logList) {
+      const entry = document.createElement("div");
+      entry.style.color = LOG_COLORS[type] || LOG_COLORS.default;
+      entry.style.fontSize = "11px";
+      entry.style.fontFamily = "monospace";
+      entry.style.padding = "1px 4px";
+      const timeStr = new Date().toLocaleTimeString();
+      entry.textContent = `[${timeStr}] ${message}`;
+      logList.appendChild(entry);
+      if (logList.children.length > MAX_LOG_ENTRIES) logList.removeChild(logList.firstChild);
+      logList.scrollTop = logList.scrollHeight;
+    }
+  };
 
   canvas.addEventListener("click", (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -560,6 +623,32 @@ document.addEventListener("DOMContentLoaded", () => {
       type: pos.type
     }));
 
+    // Detection radius circle (2000 units) around player
+    if (player) {
+      drawDashedCircle({
+        x: player.x, y: player.y,
+        radius: 2000,
+        color: "rgba(255, 255, 255, 0.15)",
+        lineWidth: 1,
+        dash: [6, 6]
+      });
+    }
+
+    // Orbit radius circle when orbiting
+    const stateManager = client.controller?.StateManager;
+    if (stateManager?.navigation?.orbiting && player && selected) {
+      const targetShip = client.scene.ships[selected];
+      if (targetShip) {
+        drawDashedCircle({
+          x: targetShip.x, y: targetShip.y,
+          radius: 400,
+          color: "rgba(0, 200, 255, 0.4)",
+          lineWidth: 1,
+          dash: [4, 4]
+        });
+      }
+    }
+
     // Ships
     const ownCorporation = Object.values(client.scene.ships).find((ship) => ship.id === playerId)?.corporation;
     Object.values(client.scene.ships).forEach((ship) => {
@@ -602,7 +691,51 @@ document.addEventListener("DOMContentLoaded", () => {
           size: 10
         });
       }
+
+      // Direction indicator: draw a small line from ship toward its target
+      if (ship.isMoving && ship.targetX != null && ship.targetY != null) {
+        const dx = ship.targetX - ship.x;
+        const dy = ship.targetY - ship.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 0) {
+          const dirLen = 15; // pixels on screen
+          const nx = dx / dist;
+          const ny = dy / dist;
+          drawLine({
+            x1: pos.x + 3, y1: pos.y + 3,
+            x2: pos.x + 3 + nx * dirLen, y2: pos.y + 3 + ny * dirLen,
+            color: ship.id === playerId ? "rgba(255,255,255,0.5)" : "rgba(255,100,100,0.4)",
+            width: 1
+          });
+        }
+      }
+
+      // Attack lines: orange lines from enemy ships attacking the player
+      if (ship.id !== playerId && ship.selected === playerId && ship.isAttacking) {
+        const playerPos = scalePosition({ x: player.x, y: player.y });
+        drawLine({
+          x1: pos.x + 3, y1: pos.y + 3,
+          x2: playerPos.x + 4, y2: playerPos.y + 4,
+          color: "rgba(255, 140, 0, 0.6)",
+          width: 1
+        });
+      }
     });
+
+    // Red line from player to selected NPC target
+    if (player && selected) {
+      const targetShip = client.scene.ships[selected];
+      if (targetShip) {
+        const playerPos = scalePosition({ x: player.x, y: player.y });
+        const targetPos = scalePosition({ x: targetShip.x, y: targetShip.y });
+        drawLine({
+          x1: playerPos.x + 4, y1: playerPos.y + 4,
+          x2: targetPos.x + 3, y2: targetPos.y + 3,
+          color: "rgba(255, 50, 50, 0.7)",
+          width: 2
+        });
+      }
+    }
 
     // Path line
     if (client.scene?.isMoving) {
@@ -619,7 +752,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Stats
-    const { pltPerHour, hnrPerHour, expPerHour, creditsPerHour } = client.stats.getStats();
+    const fullStats = client.stats.getStats();
+    const { pltPerHour, hnrPerHour, expPerHour, creditsPerHour } = fullStats;
 
     drawText({ text: "BTC:", x: 10, y: 250, })
     drawText({
@@ -641,8 +775,54 @@ document.addEventListener("DOMContentLoaded", () => {
       y: 295,
     })
 
-    drawText({ text: "Deaths:", x: 10, y: 310, })
-    drawText({ text: client.stats.deaths.toLocaleString(), x: 50, y: 310, })
+    // Kill/collect statistics
+    const runHours = (Date.now() - client.stats.startTime) / (1000 * 60 * 60);
+    const killsPerHour = runHours > 0 ? Math.round(client.stats.kills / runHours) : 0;
+    const totalBoxes = client.stats.cargoBoxesCollected + client.stats.resourceBoxesCollected + client.stats.greenBoxesCollected;
+
+    drawText({ text: "Kills:", x: 10, y: 310 })
+    drawText({ text: `${client.stats.kills} (${killsPerHour}/h)`, x: 55, y: 310 })
+
+    drawText({ text: "Deaths:", x: 10, y: 325 })
+    drawText({ text: client.stats.deaths.toLocaleString(), x: 55, y: 325 })
+
+    drawText({ text: "Boxes:", x: 10, y: 340 })
+    drawText({ text: `${totalBoxes} (C:${client.stats.cargoBoxesCollected} B:${client.stats.resourceBoxesCollected} G:${client.stats.greenBoxesCollected})`, x: 55, y: 340 })
+
+    drawText({ text: "Runtime:", x: 10, y: 355 })
+    drawText({ text: fullStats.runTime, x: 55, y: 355 })
+
+    // Bot state info panel (top-right)
+    const panelX = canvas.width - 160;
+    let panelY = 15;
+    const lineH = 13;
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(panelX - 5, 5, 160, 110);
+
+    const sm = stateManager;
+    if (sm) {
+      const mode = client.controller?.kill ? "Kill" : client.controller?.collect ? "Collect" : client.controller?.killcollect ? "KillCollect" : "Follow";
+      drawText({ text: `Mode: ${mode}`, x: panelX, y: panelY, size: 10 }); panelY += lineH;
+
+      const killState = sm.kill?.attacking ? "Attacking" : sm.kill?.killInProgress ? "In Progress" : sm.kill?.enabled ? "Searching" : "Off";
+      drawText({ text: `Kill: ${killState}`, x: panelX, y: panelY, size: 10, color: sm.kill?.attacking ? "#ff4444" : "#aaaaaa" }); panelY += lineH;
+
+      const healthState = sm.detectors?.health?.lowHealthDetected ? "LOW" : sm.detectors?.health?.healthAdviced ? "Advised" : "OK";
+      const healthColor = sm.detectors?.health?.lowHealthDetected ? "#ff4444" : sm.detectors?.health?.healthAdviced ? "#ffaa00" : "#44ff44";
+      drawText({ text: `Health: ${healthState}`, x: panelX, y: panelY, size: 10, color: healthColor }); panelY += lineH;
+
+      drawText({ text: `Escape: ${sm.escape?.enabled ? "Active" : "Off"}`, x: panelX, y: panelY, size: 10, color: sm.escape?.enabled ? "#ff8800" : "#aaaaaa" }); panelY += lineH;
+      drawText({ text: `Recover: ${sm.recover?.enabled ? "Active" : "Off"}`, x: panelX, y: panelY, size: 10, color: sm.recover?.enabled ? "#44ff44" : "#aaaaaa" }); panelY += lineH;
+      drawText({ text: `Orbiting: ${sm.navigation?.orbiting ? "Yes" : "No"}`, x: panelX, y: panelY, size: 10, color: sm.navigation?.orbiting ? "#00ccff" : "#aaaaaa" }); panelY += lineH;
+      drawText({ text: `Following: ${sm.navigation?.following ? "Yes" : "No"}`, x: panelX, y: panelY, size: 10 }); panelY += lineH;
+
+      const ammoNames = ["", "RLX_1", "GLX_2", "BLX_3", "GLX_2_AS", "MRS_6X"];
+      const rocketNames = ["", "KEP_410", "NC_30", "TNC_130"];
+      const ammo = ammoNames[sm.kill?.currentAmmo] || "-";
+      const rocket = rocketNames[sm.kill?.currentRocket] || "-";
+      drawText({ text: `Ammo: ${ammo} | Rkt: ${rocket}`, x: panelX, y: panelY, size: 10 });
+    }
 
     requestAnimationFrame(render);
   }

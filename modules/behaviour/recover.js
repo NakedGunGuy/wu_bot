@@ -55,8 +55,8 @@ module.exports = class Recover {
     const closestPortal = this.findClosestPortal(playerShip, portals);
 
     if (!closestPortal) return;
-    // Check if the ship is already at the portal using exact coordinates
-    if (playerShip.x === closestPortal.x && playerShip.y === closestPortal.y) {
+    // Check if the ship is close enough to the portal (distance-based)
+    if (calculateDistanceBetweenPoints(playerShip.x, playerShip.y, closestPortal.x, closestPortal.y) < 100) {
       await this.recoverHealthUpdate();
     } else {
       console.log(`Recovering - Moving to portal at (${closestPortal.x}, ${closestPortal.y})`);

@@ -60,6 +60,7 @@ module.exports = class stateManager {
     this.navigation = {
       inNavigation: false,
       following: false,
+      orbiting: false,
     };
 
     this.kill = {

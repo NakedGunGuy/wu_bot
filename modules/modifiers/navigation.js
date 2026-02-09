@@ -10,6 +10,8 @@ module.exports = class Navigation {
 
     this.state.navigation.inNavigation = false;
     this.state.navigation.following = false;
+    this.state.navigation.orbiting = false;
+    this.orbitAngle = 0;
   }
 
   //Make this an update function
@@ -41,13 +43,13 @@ module.exports = class Navigation {
           const moveVectorY = ship.targetY - ship.y;
 
           // Predict position ahead (about 1-2 seconds of movement)
-          const predictionFactor = Math.min(1, (distance - threshold) / 4000); // Decrease prediction by half
+          const predictionFactor = Math.min(1, (distance - threshold) / 2000);
           targetX = ship.x + parseInt(moveVectorX * predictionFactor);
           targetY = ship.y + parseInt(moveVectorY * predictionFactor);
         }
 
         // Add natural randomization to movement
-        const randomOffset = () => (Math.random() - 0.5) * Math.min(300, distance * 0.3);
+        const randomOffset = () => (Math.random() - 0.5) * Math.min(150, distance * 0.15);
         targetX += randomOffset();
         targetY += randomOffset();
 
@@ -62,12 +64,47 @@ module.exports = class Navigation {
         }
       }
 
-      // Randomize delay between movements
-      await delay(200 + Math.random() * 900);
+      // Randomize delay between movements (faster updates for tighter following)
+      await delay(200 + Math.random() * 300);
     }
   }
   async stopFollowing() {
     this.state.navigation.following = false;
+  }
+
+  async startOrbiting(shipId, orbitRadius = 400) {
+    if (this.state.navigation.orbiting) return;
+    this.state.navigation.orbiting = true;
+
+    while (this.state.navigation.orbiting && this.scene.shipExists(shipId)) {
+      const ship = this.scene.ships[shipId];
+      if (!ship) break;
+
+      // Increment angle each tick to circle around the target
+      this.orbitAngle += 0.4 + Math.random() * 0.3;
+      if (this.orbitAngle > Math.PI * 2) this.orbitAngle -= Math.PI * 2;
+
+      // Randomize orbit radius slightly (350-450) for anti-ban
+      const currentRadius = orbitRadius - 50 + Math.random() * 100;
+
+      let targetX = ship.x + Math.cos(this.orbitAngle) * currentRadius;
+      let targetY = ship.y + Math.sin(this.orbitAngle) * currentRadius;
+
+      // Keep within map bounds
+      targetX = Math.max(0, Math.min(this.scene.currentMapWidth, targetX));
+      targetY = Math.max(0, Math.min(this.scene.currentMapHeight, targetY));
+
+      // Use non-blocking moveCommand to avoid awaiting arrival
+      this.scene.moveCommand(Math.floor(targetX), Math.floor(targetY));
+
+      // Randomized delay between orbit ticks (400-800ms)
+      await delay(400 + Math.random() * 400);
+    }
+    this.state.navigation.orbiting = false;
+  }
+
+  stopOrbiting() {
+    this.state.navigation.orbiting = false;
   }
 
   async break() {
@@ -117,7 +154,7 @@ module.exports = class Navigation {
         await this.scene.move(destinationPortal.x, destinationPortal.y);
       }
 
-      if (this.scene.x == destinationPortal.x && this.scene.y == destinationPortal.y) {
+      if (calculateDistanceBetweenPoints(this.scene.x, this.scene.y, destinationPortal.x, destinationPortal.y) < 100) {
         console.log("Arrived to teleport point..");
         await this.client.sendPacket("UserActionsPacket", { actions: [{ actionId: 6 }] });
         await delay(6000);

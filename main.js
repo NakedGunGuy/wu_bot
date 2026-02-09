@@ -2,9 +2,9 @@ const Client = require("./modules/GameClient.js");
 const readline = require("readline");
 
 const client = new Client({
-  username: "miranjenkins",
+  username: "perkoK",
   password: "okskmcr44",
-  serverId: "na1",
+  serverId: "eu1",
 });
 
 // client.setSettings({
@@ -75,19 +75,85 @@ const client = new Client({
 // });
 
 client.setSettings({
-  workMap: "U-6",
+  workMap: "U-1",
   killTargets: [
-      { name: "-=(Hydro)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
-      { name: "-=(Hyper|Hidro)=-", priority: 2, ammo: 1, rockets: 1, farmNearPortal: false },
-      { name: "-=(Jenta)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
-      { name: "-=(Hyper|Jenta)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
-      { name: "-=(Hyper|Raider)=-", priority: 4, ammo: 2, rockets: 2, farmNearPortal: false },
-      { name: "-=(Raider)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
-      { name: "-=(Bangoliour)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
-      { name: "-=(Hyper|Bangoliour)=-", priority: 1, ammo: 1, rockets: 1, farmNearPortal: false },
-      { name: "-=(Zavientos)=-", priority: 2, ammo: 2, rockets: 1, farmNearPortal: true },
-      { name: "-=(Magmius)=-", priority: 2, ammo: 2, rockets: 1, farmNearPortal: true },
-      { name: "-=(Hyper|Magmius)=-", priority: 4, ammo: 2, rockets: 1, farmNearPortal: true },
+    {
+      name: "-=(Hydro)=-",
+      priority: 1,
+      ammo: 1,
+      rockets: 1,
+      farmNearPortal: false,
+    },
+    {
+      name: "-=(Hyper|Hidro)=-",
+      priority: 2,
+      ammo: 1,
+      rockets: 1,
+      farmNearPortal: false,
+    },
+    {
+      name: "-=(Jenta)=-",
+      priority: 1,
+      ammo: 1,
+      rockets: 1,
+      farmNearPortal: false,
+    },
+    {
+      name: "-=(Hyper|Jenta)=-",
+      priority: 1,
+      ammo: 1,
+      rockets: 1,
+      farmNearPortal: false,
+    },
+    {
+      name: "-=(Hyper|Raider)=-",
+      priority: 4,
+      ammo: 2,
+      rockets: 2,
+      farmNearPortal: false,
+    },
+    {
+      name: "-=(Raider)=-",
+      priority: 1,
+      ammo: 1,
+      rockets: 1,
+      farmNearPortal: false,
+    },
+    {
+      name: "-=(Bangoliour)=-",
+      priority: 1,
+      ammo: 1,
+      rockets: 1,
+      farmNearPortal: false,
+    },
+    {
+      name: "-=(Hyper|Bangoliour)=-",
+      priority: 1,
+      ammo: 1,
+      rockets: 1,
+      farmNearPortal: false,
+    },
+    {
+      name: "-=(Zavientos)=-",
+      priority: 2,
+      ammo: 2,
+      rockets: 1,
+      farmNearPortal: true,
+    },
+    {
+      name: "-=(Magmius)=-",
+      priority: 2,
+      ammo: 2,
+      rockets: 1,
+      farmNearPortal: true,
+    },
+    {
+      name: "-=(Hyper|Magmius)=-",
+      priority: 4,
+      ammo: 2,
+      rockets: 1,
+      farmNearPortal: true,
+    },
   ],
   collectBoxTypes: [{ type: 0, priority: 1 }], //type either 0 1 or 3. 3 is green box, I think 0 is bonus and 1 is resource box
   minHP: 30,
@@ -120,8 +186,8 @@ client.setSettings({
   autobuy: {
     laser: {
       RLX_1: true,
-      GLX_2: true,
-      BLX_3: true,
+      GLX_2: false,
+      BLX_3: false,
       GLX_2_AS: false,
       MRS_6X: false,
     },
@@ -159,7 +225,9 @@ rl.on("line", async (input) => {
       console.log("targeting", targetId);
 
       await new Promise((resolve) => setTimeout(resolve, 100));
-      client.client.sendPacket("UserActionsPacket", { actions: [{ actionId: 3 }] });
+      client.client.sendPacket("UserActionsPacket", {
+        actions: [{ actionId: 3 }],
+      });
     }
   }
 });

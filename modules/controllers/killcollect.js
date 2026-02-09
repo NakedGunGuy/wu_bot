@@ -39,8 +39,11 @@ module.exports = class KillCollect {
 
   async activateKillAndCollectLoop() {
     while (this.state.killAndCollect.enabled) {
+      if (this.state.escape.enabled || this.state.recover.enabled) {
+        await delay(100);
+        continue;
+      }
       this.update();
-      this.killModule.antibanMove();
       await delay(20);
     }
   }

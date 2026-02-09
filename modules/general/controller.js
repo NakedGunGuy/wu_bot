@@ -140,6 +140,10 @@ module.exports = class Controller {
       if (this.BoolManager.enabled("lowhealth")) return;
       console.log("Low health detected, retreating");
       this.stats.messageState = "Low health detected, retreating";
+      // Force-stop kill if attacking, so we can flee immediately
+      if (this.StateManager.kill.attacking || this.StateManager.kill.killInProgress) {
+        this.KillManager.resetState();
+      }
       this.Recover.start();
     } else {
       if (this.StateManager.recover.enabled) return;
@@ -151,15 +155,16 @@ module.exports = class Controller {
 
   checkHealthAdviced() {
     const healthState = this.StateManager.detectors.health;
-    const isBusy = this.StateManager.kill.attacking || this.StateManager.collect.collecting || this.StateManager.navigation.inNavigation;
 
     if (healthState.healthAdviced) {
-      if (!isBusy) {
-        if (this.BoolManager.enabled("healthAdviced")) return;
-        console.log("Advice health detected, retreating");
-        this.stats.messageState = "Advice health detected, retreating";
-        this.Recover.start();
+      if (this.BoolManager.enabled("healthAdviced")) return;
+      console.log("Advice health detected, retreating");
+      this.stats.messageState = "Advice health detected, retreating";
+      // Force-stop kill if attacking, so we can recover immediately
+      if (this.StateManager.kill.attacking || this.StateManager.kill.killInProgress) {
+        this.KillManager.resetState();
       }
+      this.Recover.start();
     } else {
       if (this.StateManager.recover.enabled) return;
       if (this.BoolManager.disabled("healthAdviced")) return;

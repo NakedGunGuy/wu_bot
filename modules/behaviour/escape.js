@@ -71,7 +71,7 @@ module.exports = class Escape {
       }
       this.state.escape.waitedTime = 0;
       this.stats.messageState = "Escaping - In safe zone, but enemy detected";
-    } else if (playerShip.x === closestPortal.x && playerShip.y === closestPortal.y) {
+    } else if (calculateDistanceBetweenPoints(playerShip.x, playerShip.y, closestPortal.x, closestPortal.y) < 100) {
       if (dev) console.log("ESCAPE: At portal but not in safe zone");
       this.stats.messageState = "Escaping - At portal but not in safe zone";
       if (isBeingAttacked) {

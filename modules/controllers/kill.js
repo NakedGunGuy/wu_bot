@@ -15,13 +15,10 @@ module.exports = class Kill {
     this.state.kill.targetedID = null;
     this.state.kill.selected = false;
     this.state.kill.attacking = false;
-    this.state.kill.antibanMoving = false;
-    this.state.kill.lastMoveTimestammp = 0;
     this.state.kill.currentAmmo = null;
     this.state.kill.currentRocket = null;
 
     this.PORTAL_FARMING_DISTANCE = 3000;
-    this.antibanTime = 15000;
   }
 
   start() {
@@ -40,52 +37,18 @@ module.exports = class Kill {
   async activateKillLoop() {
     console.log("Activating kill loop");
     while (this.state.kill.enabled) {
+      if (this.state.escape.enabled || this.state.recover.enabled) {
+        await delay(100);
+        continue;
+      }
       this.update();
-      this.antibanMove();
       await delay(100);
     }
   }
 
-  async antibanMove() {
-    if (!this.settings.antiban.randomMovement) return;
-    if (this.scene.isMoving) {
-      this.state.kill.lastMoveTimestammp = Date.now();
-    }
-
-    // Check if we need to trigger antiban movement
-    if (Date.now() - this.state.kill.lastMoveTimestammp > this.antibanTime && this.state.kill.attacking && !this.state.collect.collecting) {
-      console.log("Antiban moving");
-      this.stats.messageState = "Antiban moving";
-      this.state.kill.lastMoveTimestammp = Date.now();
-      this.state.kill.antibanMoving = true;
-      this.antibanTime = 20000 + Math.floor(Math.random() * 10000);
-
-      // Function to generate a random offset with a random sign
-      const randomOffset = () => Math.floor(Math.random() * 100) * 5;
-      const randomSign = () => (Math.random() < 0.5 ? 1 : -1);
-      let xOffset = randomOffset() * randomSign();
-      let yOffset = randomOffset() * randomSign();
-      let newX = this.scene.x + xOffset;
-      let newY = this.scene.y + yOffset;
-
-      // Ensure the new coordinates are within bounds
-      const isValidCoordinate = (x, y) => {
-        return x >= 0 && y >= 0 && x <= this.scene.currentMapWidth && y <= this.scene.currentMapHeight;
-      };
-
-      // If the new coordinates are out of bounds, log and skip the move
-      if (isValidCoordinate(newX, newY)) {
-        await this.navigation.move(newX, newY);
-      } else {
-        console.log("Ignored out-of-bounds move: ", { x: newX, y: newY });
-        this.stats.messageState = "Antiban moving - Out of bounds";
-      }
-
-      this.state.kill.antibanMoving = false;
-    }
-  }
-
   async update() {
+    if (this.state.escape.enabled || this.state.recover.enabled) return;
+
     if (!this.state.kill.targetedID) {
       if (this.state.detectors.break.breakAdviced) return;
       if (this.state.detectors.health.healthAdviced) return;
@@ -122,6 +85,10 @@ module.exports = class Kill {
   async awaitKill(npcID) {
     while (this.state.kill.attacking && this.state.kill.enabled) {
       await delay(100);
+      if (this.state.escape.enabled || this.state.recover.enabled) {
+        return this.resetState();
+      }
+
       const playerShip = this.scene.getPlayerShip();
       if (playerShip && playerShip.selected != npcID) {
         this.stats.incrementKills();
@@ -130,6 +97,8 @@ module.exports = class Kill {
 
       const distance = this.navigation.getDistanceToId(npcID);
       if (!distance || distance > 1200) {
+        // NPC moved too far — stop orbiting and re-follow
+        this.navigation.stopOrbiting();
         return this.resetState();
       }
     }
@@ -152,6 +121,7 @@ module.exports = class Kill {
         this.client.sendPacket("UserActionsPacket", { actions: [{ actionId: 3 }] });
         this.state.kill.attacking = true;
         this.navigation.stopFollowing();
+        this.navigation.startOrbiting(npcID);
 
         const ship = this.scene.ships[npcID];
         if (!ship) {
@@ -246,6 +216,7 @@ module.exports = class Kill {
     this.state.kill.targetedID = null;
     this.state.kill.selected = false;
     this.navigation.stopFollowing();
+    this.navigation.stopOrbiting();
   }
 
   async handlePortalFarming(npcID) {

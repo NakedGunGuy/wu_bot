@@ -35,7 +35,7 @@ module.exports = class Health {
   async activateWatchLoop() {
     while (this.state.detectors.health.enabled) {
       this.update();
-      await delay(1000); // Check every 100ms
+      await delay(200); // Check every 200ms
     }
   }
 
