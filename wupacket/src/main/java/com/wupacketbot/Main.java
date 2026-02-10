@@ -12,7 +12,10 @@ import com.spaiowenta.commons.packets.RocketSwitchRequest;
 import com.spaiowenta.commons.packets.UserActionsPacket;
 import com.spaiowenta.commons.packets.chat.ChatMessageRequest;
 import com.spaiowenta.commons.packets.equip.EquipRequestPacket;
+import com.spaiowenta.commons.packets.equip.EquipMoveRequestPacket;
 import com.spaiowenta.commons.packets.equip.ResourcesActionRequestPacket;
+import com.spaiowenta.commons.packets.quests.missions.QuestsActionRequestPacket;
+import com.spaiowenta.commons.packets.missions.MissionsActionRequestPacket;
 import com.spaiowenta.commons.packets.stats.StatsRequest;
 
 import java.io.IOException;
@@ -38,7 +41,10 @@ public class Main {
         endpointClassMap.put("RepairRequestPacket", RepairRequestPacket.class);
         endpointClassMap.put("RocketSwitchRequest", RocketSwitchRequest.class);
         endpointClassMap.put("EquipRequestPacket", EquipRequestPacket.class);
+        endpointClassMap.put("EquipMoveRequestPacket", EquipMoveRequestPacket.class);
         endpointClassMap.put("ChatMessageRequest", ChatMessageRequest.class);
+        endpointClassMap.put("QuestsActionRequestPacket", QuestsActionRequestPacket.class);
+        endpointClassMap.put("MissionsActionRequestPacket", MissionsActionRequestPacket.class);
         // Add other mappings as needed
     }
 

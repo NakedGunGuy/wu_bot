@@ -13,6 +13,9 @@ node_modules
 adminScanningReports.txt
 adminShip.txt
 
+# Go bot config (contains credentials)
+wu_bot_go/config.yaml
+
 # Build output
 /out
 

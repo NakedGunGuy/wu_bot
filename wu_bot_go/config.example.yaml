@@ -1,0 +1,80 @@
+discord_webhook_url: ""
+jar_path: "./wupacket.jar"
+log_level: "info"
+
+accounts:
+  - username: "player1"
+    password: "your_password"
+    server: "eu1"
+    auto_start: true
+    mode: "killcollect"  # kill, collect, killcollect, follow
+    settings:
+      work_map: "U-1"
+      kill_targets:
+        - name: "-=(Hydro)=-"
+          priority: 1
+          ammo: 1
+          rockets: 1
+          farm_near_portal: false
+        - name: "-=(Hyper|Hidro)=-"
+          priority: 2
+          ammo: 1
+          rockets: 1
+          farm_near_portal: false
+      collect_box_types:
+        - type: 0
+          priority: 1
+        - type: 1
+          priority: 1
+        - type: 3
+          priority: 10
+      health:
+        min_hp: 30
+        advice_hp: 70
+      escape:
+        enabled: true
+        delay_ms: 20000
+      admin:
+        enabled: true
+        delay_minutes: 5
+      config:
+        attacking: 1
+        fleeing: 2
+        flying: 2
+        switch_on_shields_down: false
+      autobuy:
+        laser:
+          RLX_1: true
+          GLX_2: false
+          BLX_3: false
+          GLX_2_AS: false
+          MRS_6X: false
+        rockets:
+          KEP_410: false
+          NC_30: true
+          TNC_130: true
+        key:
+          enabled: false
+          save_plt: 50000
+      enrichment:
+        lasers:
+          enabled: true
+          material_type: 4
+        rockets:
+          enabled: false
+          material_type: 0
+        shields:
+          enabled: true
+          material_type: 5
+          amount: 10
+          min_amount: 10
+        speed:
+          enabled: false
+          material_type: 0
+          amount: 10
+          min_amount: 10
+      kill:
+        target_engaged_npc: false
+      break:
+        interval_minutes: 60
+        duration_minutes: 5

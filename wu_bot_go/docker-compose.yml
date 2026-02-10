@@ -1,0 +1,9 @@
+services:
+  wubot:
+    build: .
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    command: ["--headless", "--config", "/app/config.yaml"]
