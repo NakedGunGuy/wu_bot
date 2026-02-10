@@ -10,8 +10,8 @@ const Client = require("./modules/GameClient");
 
 const BOT_CONFIG = {
   // Account credentials
-  username: "miranjenkins",
-  password: "okskmcr44",
+  username: "miranjenkins", // WARNING IT IS PUBLIC
+  password: "okskmcr44",    // WARNING IT IS PUBLIC
   serverId: "na1",
 
   // Bot mode: "kill", "collect", "killcollect", or "follow"
